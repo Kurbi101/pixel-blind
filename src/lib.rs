@@ -73,8 +73,8 @@ impl Canvas {
             "Pos ({}, {}) is out of bounds for canvas of size {} x {}",
             x,
             y,
-            self.height * 4,
-            self.width * 2
+            self.width * 2,
+            self.height * 4
         );
         result
     }
@@ -163,6 +163,23 @@ impl Canvas {
 
     pub fn line(&mut self, x1: u32, y1: u32, x2: u32, y2: u32) {
         self.line_colored(x1, y1, x2, y2, Color::White);
+    }
+
+    pub fn polygon_colored(&mut self, x: u32, y: u32, sides: u32, radius: u32, angle: f64, color: Color) {
+        let theta = 2.0 * std::f64::consts::PI / sides as f64;
+        for n in 0..sides {
+            let a = theta * n as f64 + angle;
+            let b = theta * (n as f64 + 1.0) + angle;
+            let x1 = x as f64 + a.cos() * radius as f64 / 2.0;
+            let y1 = y as f64 + a.sin() * radius as f64 / 2.0;
+            let x2 = x as f64 + b.cos() * radius as f64 / 2.0;
+            let y2 = y as f64 + b.sin() * radius as f64 / 2.0;
+            self.line_colored(x1 as u32, y1 as u32, x2 as u32, y2 as u32, color);
+        }
+    }
+
+    pub fn polygon(&mut self, x: u32, y: u32, sides: u32, radius: u32, angle: f64) {
+        self.polygon_colored(x, y, sides, radius, angle, Color::White);
     }
 
     pub fn row(&self) -> Vec<String> {
