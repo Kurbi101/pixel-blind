@@ -1,11 +1,11 @@
 use pixel_blind::Canvas;
-use std::{f64::consts::PI, io::Write, thread, time::Duration};
+use std::{f32, io::Write, thread, time::Duration};
 
 fn main() {
     let width: u32 = 80;
     let height: u32 = 80;
     let mut canvas = Canvas::new(width, height);
-    let mut theta: f64 = 0.0;
+    let mut theta = 0.0;
 
     print!("\x1B[s\x1B[?25l");
     std::io::stdout().flush().unwrap();
@@ -23,7 +23,7 @@ fn main() {
 
         print!("\x1B[u{}", canvas.frame());
         std::io::stdout().flush().unwrap();
-        theta += PI / 40.0;
+        theta += f32::consts::PI / 40.0;
         thread::sleep(Duration::from_millis(50));
     }
 }

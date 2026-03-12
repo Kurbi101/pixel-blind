@@ -41,10 +41,10 @@ impl Pos {
     }
 }
 
-fn lerp(t: f64, x1: u32, y1: u32, x2: u32, y2: u32) -> (f64, f64) {
-    let x_diff = x2 as f64 - x1 as f64;
-    let y_diff = y2 as f64 - y1 as f64;
-    (x1 as f64 + t * x_diff, y1 as f64 + t * y_diff)
+fn lerp(t: f32, x1: u32, y1: u32, x2: u32, y2: u32) -> (f32, f32) {
+    let x_diff = x2 as f32 - x1 as f32;
+    let y_diff = y2 as f32 - y1 as f32;
+    (x1 as f32 + t * x_diff, y1 as f32 + t * y_diff)
 }
 
 pub struct Canvas {
@@ -156,7 +156,7 @@ impl Canvas {
         const ACCURACY: usize = 100;
 
         for t in 0..=ACCURACY {
-            let (x, y) = lerp(t as f64 / ACCURACY as f64, x1, y1, x2, y2);
+            let (x, y) = lerp(t as f32 / ACCURACY as f32, x1, y1, x2, y2);
             self.set_colored(x as u32, y as u32, color);
         }
     }
@@ -165,20 +165,28 @@ impl Canvas {
         self.line_colored(x1, y1, x2, y2, Color::White);
     }
 
-    pub fn polygon_colored(&mut self, x: u32, y: u32, sides: u32, radius: u32, angle: f64, color: Color) {
-        let theta = 2.0 * std::f64::consts::PI / sides as f64;
+    pub fn polygon_colored(
+        &mut self,
+        x: u32,
+        y: u32,
+        sides: u32,
+        radius: u32,
+        angle: f32,
+        color: Color,
+    ) {
+        let theta = 2.0 * std::f32::consts::PI / sides as f32;
         for n in 0..sides {
-            let a = theta * n as f64 + angle;
-            let b = theta * (n as f64 + 1.0) + angle;
-            let x1 = x as f64 + a.cos() * radius as f64 / 2.0;
-            let y1 = y as f64 + a.sin() * radius as f64 / 2.0;
-            let x2 = x as f64 + b.cos() * radius as f64 / 2.0;
-            let y2 = y as f64 + b.sin() * radius as f64 / 2.0;
+            let a = theta * n as f32 + angle;
+            let b = theta * (n as f32 + 1.0) + angle;
+            let x1 = x as f32 + a.cos() * radius as f32 / 2.0;
+            let y1 = y as f32 + a.sin() * radius as f32 / 2.0;
+            let x2 = x as f32 + b.cos() * radius as f32 / 2.0;
+            let y2 = y as f32 + b.sin() * radius as f32 / 2.0;
             self.line_colored(x1 as u32, y1 as u32, x2 as u32, y2 as u32, color);
         }
     }
 
-    pub fn polygon(&mut self, x: u32, y: u32, sides: u32, radius: u32, angle: f64) {
+    pub fn polygon(&mut self, x: u32, y: u32, sides: u32, radius: u32, angle: f32) {
         self.polygon_colored(x, y, sides, radius, angle, Color::White);
     }
 
@@ -218,5 +226,95 @@ impl Canvas {
 
     pub fn frame(&self) -> String {
         self.row().join("\n")
+    }
+    
+    pub fn print(&self) {
+        print!("{}", self.frame())
+    }
+}
+
+pub struct Turtle {
+    x: f32,
+    y: f32,
+    is_brushing: bool,
+    color: Color,
+    theta: f32,
+    canvas: Canvas,
+}
+
+impl Turtle {
+    pub fn new(x: f32, y: f32, canvas: Canvas) -> Self {
+        Self {
+            x,
+            y,
+            is_brushing: true,
+            color: Color::White,
+            theta: 0.0,
+            canvas,
+        }
+    }
+
+    pub fn penup(&mut self) {
+        self.is_brushing = false
+    }
+
+    pub fn pendown(&mut self) {
+        self.is_brushing = true
+    }
+
+    pub fn toggle(&mut self) {
+        self.is_brushing = !self.is_brushing
+    }
+
+    pub fn color(&mut self, color: Color) {
+        self.color = color
+    }
+
+    pub fn clear_brush(&mut self) {
+        self.color(Color::White);
+    }
+
+    pub fn teleport(&mut self, x: f32, y: f32) {
+        if self.is_brushing {
+            self.canvas.line_colored(
+                0.max(self.x.round() as u32),
+                0.max(self.y.round() as u32),
+                0.max(x.round() as u32),
+                0.max(y.round() as u32),
+                self.color,
+            );
+        } 
+        self.x = x;
+        self.y = y;
+    }
+
+    pub fn forward(&mut self, dist: f32) {
+        let x = self.x + self.theta.to_radians().cos() * dist;
+        let y = self.y + self.theta.to_radians().sin() * dist;
+        self.teleport(x, y);
+    }
+    
+    pub fn backward(&mut self, dist: f32) {
+        self.forward(-dist);
+    }
+
+    pub fn back(&mut self, dist: f32) {
+        self.forward(-dist);
+    }
+    
+    pub fn right(&mut self, theta: f32) {
+        self.theta += theta
+    }
+    
+    pub fn left(&mut self, theta: f32) {
+        self.theta -= theta
+    }
+    
+    pub fn frame(&self) -> String {
+        self.canvas.frame()
+    }
+    
+    pub fn print(&self) {
+        self.canvas.print()
     }
 }
